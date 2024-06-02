@@ -24,9 +24,10 @@
     div.style = `z-index: 1000;background-color: rgb(168, 177, 177);position:fixed; top:2em; right:2em`
     div.className = "getCoupon"
     div.innerHTML = `
-      <input type="text" name="hour" id="hour" placeholder='0'><label for="hour">时</label>
-      <input type="text" name="minute" id="minute" placeholder='0'><label for="minute">分</label>
-      <input type="text" name="second" id="second" placeholder='0'><label for="second">秒</label>
+      <input type="text" name="hour" id="hour" placeholder='0' style='width:3em'><label for="hour">时</label>
+      <input type="text" name="minute" id="minute" placeholder='0' style='width:3em'><label for="minute">分</label>
+      <input type="text" name="second" id="second" placeholder='0' style='width:3em'><label for="second">秒</label>
+      <input type="text" name="millisecond" id="millisecond" placeholder='0' style='width:3em'><label for="millisecond">毫秒</label>
       <br>
       <button class="run-script" style="margin-top:10px; margin-right:10px">添加</button>
       <button class="clear-script" style="margin-right:10px">清除</button>
@@ -77,13 +78,13 @@
   }
 
   var task;  // 用于取消任务
-  function scheduleRefresh(hour, minute, second=0) {
+  function scheduleRefresh(hour, minute, second=0, millisecond=0) {
       var now = new Date();
       var refreshTime = new Date();
       refreshTime.setHours(hour);
       refreshTime.setMinutes(minute);
       refreshTime.setSeconds(second);
-      refreshTime.setMilliseconds(0);
+      refreshTime.setMilliseconds(millisecond);
 
       if (now > refreshTime) {
           // 如果当前时间已经过了今天的指定时间，设置为明天
@@ -108,13 +109,16 @@
     var hourInput = document.getElementById('hour');
     var minuteInput = document.getElementById('minute');
     var secondInput = document.getElementById('second');
+    var millisecondInput = document.getElementById('millisecond');
 
     // 获取时、分、秒的值
     var hourValue = hourInput.value == '' ? 0 : hourInput.value;
     var minuteValue = minuteInput.value == '' ? 0 : minuteInput.value;
     var secondValue = secondInput.value == '' ? 0 : secondInput.value;
+    var millisecondValue = millisecondInput.value == '' ? 0 : millisecondInput.value;
+
     // 设置定时刷新
-    scheduleRefresh(hourValue, minuteValue, secondValue);
+    scheduleRefresh(hourValue, minuteValue, secondValue, millisecondValue);
     refresh_coupon_status()
   })
 
