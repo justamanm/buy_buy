@@ -1,18 +1,38 @@
+
+
 <head>
   <script>
+    // 如何使用：将下面代码放到油猴里，然后设置好优惠券页面地址即可
+    // 抢购页面（可能会过期）：https://prodev.m.jd.com/mall/active/3CRF3wFPUCXdipAQfV8foDevVAfv/index.html?utm_term=CopyURL&utm_user=plusmember&utm_source=iosapp&utm_campaign=t_335139774&utm_medium=appshare&_ts=1717293613179&ad_od=share&gxd=RnAowmRcazPRmpscqNEjWrblkRXPkZw4PG4uADapz2KcC5DmQI6PyAE6zORG8gA&gx=RnAomTM2bWCKn5sSq9ByDxdDjabyLn8
+
+    // 代码说明
+    // 使用position:fixed将插件悬浮在页面右上方
+    // 使用localStorage存储状态，用来判断是打开页面还是开始抢购后的刷新页面
+    //   如果不做判断的话，每次刷新页面都会执行抢购的逻辑
+    // 如果要滚动页面的话，要用setTimeout包一下，否则不生效，参考：https://blog.csdn.net/Kratial/article/details/128849833
+
+    // 功能：
+      // 添加任务
+      //   1.设置好抢券时间
+      //   2.点击添加，即可开启抢购，右侧会显示"on"（同一时间只会有一个任务）
+      //   3.开始后，会先刷新页面，把抢购页面刷出来，然后会定位到券元素进行点击，即可完成
+      // 删除任务
+      //   1.点击清除按钮即可，右侧会显示"off"
+      
+
     let div = document.createElement('div')
-  div.style = `z-index: 1000;background-color: rgb(168, 177, 177);position:fixed; top:2em; right:2em`
-  div.className = "getCoupon"
-  div.innerHTML = `
-    <input type="text" name="hour" id="hour" placeholder='0'><label for="hour">时</label>
-    <input type="text" name="minute" id="minute" placeholder='0'><label for="minute">分</label>
-    <input type="text" name="second" id="second" placeholder='0'><label for="second">秒</label>
-    <br>
-    <button class="run-script">添加</button>
-    <button class="clear-script">清除</button>
-    <button class="reset-script">重置</button>
-    <span id="coupon_status"></span>
-  `
+    div.style = `z-index: 1000;background-color: rgb(168, 177, 177);position:fixed; top:2em; right:2em`
+    div.className = "getCoupon"
+    div.innerHTML = `
+      <input type="text" name="hour" id="hour" placeholder='0'><label for="hour">时</label>
+      <input type="text" name="minute" id="minute" placeholder='0'><label for="minute">分</label>
+      <input type="text" name="second" id="second" placeholder='0'><label for="second">秒</label>
+      <br>
+      <button class="run-script">添加</button>
+      <button class="clear-script">清除</button>
+      
+      <span id="coupon_status"></span>
+    `
 
   document.body.appendChild(div);
 
@@ -21,6 +41,9 @@
   function refresh_coupon_status(){
     coupon_status = localStorage.getItem('coupon_status')
     console.log(coupon_status)
+    if(coupon_status == ''){
+      localStorage.setItem('coupon_status', 'off')
+    }
     let coupon_status_element = document.getElementById('coupon_status')
     coupon_status_element.innerText = coupon_status
   }
@@ -29,10 +52,9 @@
 
   if(coupon_status == 'on'){
     console.log('is on')
-    // 当页面加载完成后，滚动到指定位置
     window.addEventListener('load', function (event) {
       console.log('loaded');
-      // setTimeout(()=>{
+      // setTimeout(()=>{  // // 不使用这种指定位置的滑动
       //   window.scrollTo({
       //     top:1284,
       //     behavior: 'instant'
@@ -43,12 +65,18 @@
       console.dir(targets)
       if (targets.length > 0) { // 确保集合中有元素
         let target = targets[2]; // 获取集合中的第一个元素
+        // 如果要滚动页面的话，要用异步任务包一下，否则scrollIntoView不生效，参看https://blog.csdn.net/Kratial/article/details/128849833
         // setTimeout(()=>target.scrollIntoView({ behavior: 'instant' }))
         target.click(); // 直接点击元素，不用下拉
+        
+        // 提示任务完成
+        localStorage.setItem('coupon_status', 'success')
+        refresh_coupon_status()
       }
     })
   }
 
+  var task;  // 用于取消任务
   function scheduleRefresh(hour, minute, second=0) {
       var now = new Date();
       var refreshTime = new Date();
@@ -66,14 +94,13 @@
       var timeout = refreshTime - now;
       console.log('added')
       setTimeout(function() {
-          window.location.reload();
+          window.location.reload();  // 开始抢购，先刷新页面
       }, timeout);
   }
 
   
   let button_run = document.getElementsByClassName('run-script')[0];
   let button_clear = document.getElementsByClassName('clear-script')[0];
-  let button_reset = document.getElementsByClassName('reset-script')[0];
 
   button_run.addEventListener('click', ()=>{
     localStorage.setItem('coupon_status', 'on');
@@ -92,14 +119,11 @@
   })
 
   button_clear.addEventListener('click', ()=>{
+    clearTimeout(task);
     localStorage.setItem('coupon_status', 'off');
     refresh_coupon_status()
   })
 
-  button_reset.addEventListener('click', ()=>{
-    localStorage.removeItem('coupon_status')
-    refresh_coupon_status()
-  })
   </script>
 </head>
 
