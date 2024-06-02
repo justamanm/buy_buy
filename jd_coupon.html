@@ -1,0 +1,108 @@
+<head>
+  <script>
+    let div = document.createElement('div')
+  div.style = `z-index: 1000;background-color: rgb(168, 177, 177);position:fixed; top:2em; right:2em`
+  div.className = "getCoupon"
+  div.innerHTML = `
+    <input type="text" name="hour" id="hour" placeholder='0'><label for="hour">时</label>
+    <input type="text" name="minute" id="minute" placeholder='0'><label for="minute">分</label>
+    <input type="text" name="second" id="second" placeholder='0'><label for="second">秒</label>
+    <br>
+    <button class="run-script">添加</button>
+    <button class="clear-script">清除</button>
+    <button class="reset-script">重置</button>
+    <span id="coupon_status"></span>
+  `
+
+  document.body.appendChild(div);
+
+  var coupon_status;
+
+  function refresh_coupon_status(){
+    coupon_status = localStorage.getItem('coupon_status')
+    console.log(coupon_status)
+    let coupon_status_element = document.getElementById('coupon_status')
+    coupon_status_element.innerText = coupon_status
+  }
+
+  refresh_coupon_status()
+
+  if(coupon_status == 'on'){
+    console.log('is on')
+    // 当页面加载完成后，滚动到指定位置
+    window.addEventListener('load', function (event) {
+      console.log('loaded');
+      // setTimeout(()=>{
+      //   window.scrollTo({
+      //     top:1284,
+      //     behavior: 'instant'
+      //   })
+      // })
+      let targets = document.getElementsByClassName("lazyload-img lazyload-img-wmh")
+      // let targets = document.getElementsByClassName("link")
+      console.dir(targets)
+      if (targets.length > 0) { // 确保集合中有元素
+        let target = targets[2]; // 获取集合中的第一个元素
+        // setTimeout(()=>target.scrollIntoView({ behavior: 'instant' }))
+        target.click(); // 直接点击元素，不用下拉
+      }
+    })
+  }
+
+  function scheduleRefresh(hour, minute, second=0) {
+      var now = new Date();
+      var refreshTime = new Date();
+      refreshTime.setHours(hour);
+      refreshTime.setMinutes(minute);
+      refreshTime.setSeconds(second);
+      refreshTime.setMilliseconds(0);
+
+      if (now > refreshTime) {
+          // 如果当前时间已经过了今天的指定时间，设置为明天
+          // refreshTime.setDate(refreshTime.getDate() + 1);
+          return;
+      }
+
+      var timeout = refreshTime - now;
+      console.log('added')
+      setTimeout(function() {
+          window.location.reload();
+      }, timeout);
+  }
+
+  
+  let button_run = document.getElementsByClassName('run-script')[0];
+  let button_clear = document.getElementsByClassName('clear-script')[0];
+  let button_reset = document.getElementsByClassName('reset-script')[0];
+
+  button_run.addEventListener('click', ()=>{
+    localStorage.setItem('coupon_status', 'on');
+
+    var hourInput = document.getElementById('hour');
+    var minuteInput = document.getElementById('minute');
+    var secondInput = document.getElementById('second');
+
+    // 获取时、分、秒的值
+    var hourValue = hourInput.value == '' ? 0 : hourInput.value;
+    var minuteValue = minuteInput.value == '' ? 0 : minuteInput.value;
+    var secondValue = secondInput.value == '' ? 0 : secondInput.value;
+    // 设置定时刷新
+    scheduleRefresh(hourValue, minuteValue, secondValue);
+    refresh_coupon_status()
+  })
+
+  button_clear.addEventListener('click', ()=>{
+    localStorage.setItem('coupon_status', 'off');
+    refresh_coupon_status()
+  })
+
+  button_reset.addEventListener('click', ()=>{
+    localStorage.removeItem('coupon_status')
+    refresh_coupon_status()
+  })
+  </script>
+</head>
+
+<body>
+  <h3>jd coupon</h3>
+</body>
