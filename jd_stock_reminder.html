@@ -1,0 +1,186 @@
+
+
+<body>
+  <div class="item no-stock" data-sku="10096734771614" data-value="02/中灰/沉绿/黑" title="「02/中灰/沉绿/黑」-40.5 无">
+    <b></b>
+                                        <a href="#none" clstag="shangpin|keycount|product|yanse-02/中灰/沉绿/黑" one-link-mark="yes">
+                                                                                                    <img data-img="1" src="//img14.360buyimg.com/n9/s40x40_jfs/t1/226509/38/18710/115907/665e79dcF5c493dfc/2b97d4728f5fd935.jpg.avif" width="40" height="40" alt="02/中灰/沉绿/黑"><i>02/中灰/沉绿/黑</i>
+                                                                                        </a>
+                                    <span class="no-stock-tip">无货</span></div>
+
+
+
+  
+
+  <script>
+    // 如何使用：将下面代码放到油猴里，然后刷新间隔、元素的querySelector即可
+
+    // 功能：
+      // 添加任务
+      //   1.设置好刷新间隔时间、元素querySelector
+      //   2.点击添加，即可开启监测，右侧会显示任务状态"on"（同一时间只会有一个任务）
+      //   3.开始后
+      //        如果检测到了有货则任务结束（播放音乐、状态显示success）
+      //        如果没有检测到，则会刷新页面，直到有货为止
+      // 删除任务
+      //   1.点击清除按钮即可，右侧会显示"off"
+      
+    // 代码说明：
+    // 使用localStorage来存储任务、状态
+    // 1.加载页面完成后，会检测localStorage中是否有任务
+    //   如果有，则直接拿出来执行
+    //   如果没有，则什么也不做
+    // 2.执行任务，页面加载完成如果检测到localStorage中有任务，则和点击添加按钮调用同一个函数
+    // 3.由于是严格模式，所以变量必须使用let/var定义
+
+    var button_run;
+    var button_clear;
+    var selector_ele;
+    var fresh_input_ele;
+    var reload_page
+    var dash = "/";
+    // var storage_status;
+    // var storage_task;
+
+    (function init(){
+      // 不使用网易云音乐嵌入，因为有同源问题，导致无法用js控制音乐的播放和停止
+      // let div_play = document.createElement('div')
+      // div_play.style = `z-index: 1000;position:fixed; top:2em; right:2em`
+      // div_play.innerHTML = `<iframe frameborder="no" border="0" marginwidth="0" marginheight="0" width=330 height=86 src="//music.163.com/outchain/player?type=2&id=1855080368&auto=0&height=66"></iframe>`
+      // document.body.appendChild(div_play);
+
+      let div_audio = document.createElement('div')
+      div_audio.innerHTML = 
+        `<!-- <audio controls>  // 控件-不自动播放 -->
+        <!-- <audio autoplay> // 自动播放 -->
+        <audio id="myAudio">  <!-- js控制播放 -->
+        <source src="https://nf-sycdn.kuwo.cn/38c84c5ea17d6bb2190bbfedde035f82/665ed5ce/resource/n3/46/28/2941018181.mp3?from=vip"
+         type="audio/mpeg">
+        您的浏览器不支持音频元素。
+        </audio>`
+      document.body.appendChild(div_audio)
+      
+      let div_input = document.createElement('div')
+      div_input.style = `z-index: 1000;background-color: rgb(168, 177, 177);
+      position:fixed; top:2em; right:2em`
+      div_input.className = "getCoupon"
+      div_input.innerHTML = `
+        <label for="fresh_time">刷新间隔</label>
+        <input type="text" name="fresh_time" id="fresh_time" placeholder='10' style='width:50px'>
+        <br>
+        <label for="selector">请填入querySelector匹配字符串</label>
+        <input type="text" name="selector" id="selector" placeholder='[data-sku="10096734771614"]' style='width:250px'>
+        <br>
+        <button id="run-script" style='margin:1em 1em 0'>添加</button>
+        <button id="clear-script">清除</button>
+        <span id="status" style='color:red;margin-left:1em'></span>
+      `
+      document.body.appendChild(div_input);
+      button_run = document.getElementById('run-script');
+      button_clear = document.getElementById('clear-script');
+      selector_ele = document.getElementById('selector')
+      fresh_input_ele = document.getElementById('fresh_time')
+
+      refresh_status()
+    })()
+
+    // after opening/reloading page
+    // monitor storage task
+    window.addEventListener('load', ()=>{
+      
+      console.log('loaded')
+      let storage_task = localStorage.getItem('storage_task')
+      console.log(storage_task)
+      let storage_status = localStorage.getItem('storage_status')
+      if(storage_status == 'success'){
+        localStorage.setItem('storage_status', 'off')
+      }
+
+      if(storage_task){
+        let [task_selector, task_time] = storage_task.split(dash)
+        selector_ele.value = task_selector
+        fresh_input_ele.value = task_time
+
+        start_reminder()
+      }
+    })
+    
+    function refresh_status(){
+      let storage_status = localStorage.getItem('storage_status')
+      console.log(storage_status)
+
+      if(!storage_status){
+        localStorage.setItem('storage_status', 'off')
+      }
+
+      let status_element = document.getElementById('status')
+      status_element.innerText = localStorage.getItem('storage_status')
+    }
+
+    // only click start button
+    function start_reminder(){
+      let task_selector = selector_ele.value
+      let task_time = fresh_input_ele.value
+
+      if(task_selector){
+        if(!task_time){
+          task_time = '10'
+        }
+
+        localStorage.setItem('storage_task', task_selector + dash + task_time)
+        localStorage.setItem('storage_status', 'on');
+        refresh_status()
+        console.log(localStorage.getItem('storage_task'))
+
+        reload_page = setTimeout(() => {
+          let result = execute_task(task_selector)
+          console.log('result: ' + result)
+          if(!result){
+            window.location.reload()
+          }
+        }, task_time*1000)
+      }
+    }
+
+    function execute_task(task_selector){
+        // '[data-sku="10096734771614"]'
+        let target = document.querySelector(task_selector)
+
+        let title = target.getAttribute("title")
+        if(!title.includes('无货')) {
+          // 播放音乐
+          document.getElementById("myAudio").play();
+
+          localStorage.setItem('storage_status', 'success');
+          refresh_status()
+
+          clearInterval(reload_page)
+          localStorage.removeItem('storage_task')
+          return true;
+        } 
+        return false;
+    }
+
+    function cancle_task(){
+      clearInterval(reload_page)
+      localStorage.removeItem('storage_task')
+
+      localStorage.setItem('storage_status', 'off');
+      refresh_status()
+
+      document.getElementById("myAudio").pause();
+
+      fresh_input_ele.value = ''
+      selector_ele.value = ''
+    }
+
+    button_run.addEventListener('click', () => {
+      start_reminder()
+    })
+
+    button_clear.addEventListener('click', () => {
+      cancle_task()
+    })
+
+  </script>
+</body>
